@@ -1,24 +1,167 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useQuery, useServerFn } from "@tanstack/react-query";
+import { useState } from "react";
+import { Search, Flame, BookOpen } from "lucide-react";
+import { searchManhua } from "@/lib/mangadex.functions";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    meta: [
+      { title: "InkScroll — Read Manhua Online" },
+      {
+        name: "description",
+        content:
+          "Browse and read popular manhua online. Dark, cinematic reading experience with bookmarks and reading history.",
+      },
+      { property: "og:title", content: "InkScroll — Read Manhua Online" },
+      {
+        property: "og:description",
+        content:
+          "Browse and read popular manhua online with a dark, cinematic reader.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: Home,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+function Home() {
+  const [query, setQuery] = useState("");
+  const [submitted, setSubmitted] = useState("");
+  const fetchManhua = useServerFn(searchManhua);
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["manhua", submitted],
+    queryFn: () => fetchManhua({ data: { query: submitted || undefined } }),
+  });
+
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="min-h-screen">
+      {/* Hero */}
+      <section className="relative overflow-hidden border-b border-border">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-40"
+          style={{
+            background:
+              "radial-gradient(60% 80% at 70% 10%, oklch(0.58 0.21 27 / 0.25), transparent 70%)",
+          }}
+        />
+        <div className="relative mx-auto max-w-6xl px-4 py-16 sm:py-24">
+          <div className="flex items-center gap-2 text-primary">
+            <Flame className="h-5 w-5" />
+            <span className="text-sm font-semibold uppercase tracking-widest">
+              Trending Manhua
+            </span>
+          </div>
+          <h1 className="font-display mt-4 text-6xl sm:text-8xl leading-none">
+            Dive into the
+            <br />
+            <span className="text-primary">ink-dark</span> shelves
+          </h1>
+          <p className="mt-4 max-w-xl text-muted-foreground">
+            Thousands of manhua titles, scanned and translated. Pick a series,
+            scroll vertically, lose track of time.
+          </p>
+          <form
+            className="mt-8 flex max-w-lg gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              setSubmitted(query.trim());
+            }}
+          >
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search titles… e.g. Solo Leveling"
+                className="pl-9 bg-card border-input"
+              />
+            </div>
+            <Button type="submit">Search</Button>
+          </form>
+        </div>
+      </section>
+
+      {/* Grid */}
+      <section className="mx-auto max-w-6xl px-4 py-10">
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="font-display text-3xl">
+            {submitted ? `Results for “${submitted}”` : "Most followed"}
+          </h2>
+          {data && (
+            <span className="text-sm text-muted-foreground">
+              {data.total.toLocaleString()} titles
+            </span>
+          )}
+        </div>
+
+        {isLoading && (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <div
+                key={i}
+                className="aspect-[2/3] animate-pulse rounded-lg bg-card"
+              />
+            ))}
+          </div>
+        )}
+
+        {isError && (
+          <div className="rounded-lg border border-border bg-card p-8 text-center text-muted-foreground">
+            <BookOpen className="mx-auto mb-3 h-8 w-8" />
+            Couldn't reach the catalog right now. Try again in a moment.
+          </div>
+        )}
+
+        {data && data.manga.length === 0 && (
+          <div className="rounded-lg border border-border bg-card p-8 text-center text-muted-foreground">
+            No titles found for “{submitted}”.
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+          {data?.manga.map((m) => (
+            <Link
+              key={m.id}
+              to="/title/$mangaId"
+              params={{ mangaId: m.id }}
+              className="group"
+            >
+              <div className="relative aspect-[2/3] overflow-hidden rounded-lg border border-border bg-card">
+                {m.coverUrl ? (
+                  <img
+                    src={m.coverUrl}
+                    alt={m.title}
+                    loading="lazy"
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-muted-foreground">
+                    <BookOpen className="h-8 w-8" />
+                  </div>
+                )}
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/95 to-transparent p-2 pt-8">
+                  <p className="line-clamp-2 text-sm font-semibold leading-tight">
+                    {m.title}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-1">
+                {m.tags.slice(0, 2).map((t) => (
+                  <Badge key={t} variant="secondary" className="text-[10px]">
+                    {t}
+                  </Badge>
+                ))}
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
