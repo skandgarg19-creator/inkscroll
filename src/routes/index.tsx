@@ -87,6 +87,17 @@ function Home() {
             </div>
             <Button type="submit">Search</Button>
           </form>
+          </div>
+          <div className="relative hidden lg:block">
+            <div className="pointer-events-none absolute -inset-8 rounded-full bg-[radial-gradient(circle,oklch(0.58_0.21_27/0.3),transparent_70%)] blur-2xl" />
+            <img
+              src={heroArt}
+              alt="Manhua warrior amid swirling red ink and floating comic pages"
+              width={1024}
+              height={1280}
+              className="relative aspect-[4/5] w-full rounded-2xl border border-border object-cover shadow-2xl [mask-image:linear-gradient(to_bottom,black_82%,transparent)]"
+            />
+          </div>
         </div>
       </section>
 
