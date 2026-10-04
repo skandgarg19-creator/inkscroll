@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery, useServerFn } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { getChapterPages, getChapters } from "@/lib/mangadex.functions";
@@ -7,9 +8,9 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/read/$chapterId")({
   validateSearch: (search: Record<string, unknown>) => ({
-    mangaId: (search.mangaId as string) ?? "",
-    title: (search.title as string) ?? "",
-    cover: (search.cover as string) ?? "",
+    mangaId: (search["mangaId"] as string) ?? "",
+    title: (search["title"] as string) ?? "",
+    cover: (search["cover"] as string) ?? "",
   }),
   head: () => ({
     meta: [
@@ -47,7 +48,7 @@ function ReaderPage() {
   useEffect(() => {
     if (!userId || !data || !mangaId) return;
     const chapterLabel =
-      chapters?.find((c) => c.id === chapterId)?.chapter ?? "";
+      chapters?.find((c: { id: string }) => c.id === chapterId)?.chapter ?? "";
     supabase.from("reading_history").upsert(
       {
         user_id: userId,
@@ -62,7 +63,7 @@ function ReaderPage() {
     );
   }, [userId, data, mangaId, chapterId, title, cover, chapters]);
 
-  const idx = chapters?.findIndex((c) => c.id === chapterId) ?? -1;
+  const idx = chapters?.findIndex((c: { id: string }) => c.id === chapterId) ?? -1;
   // chapters are sorted desc: newer = lower index
   const nextChapter = idx > 0 ? chapters![idx - 1] : null;
   const prevChapter =
@@ -94,7 +95,7 @@ function ReaderPage() {
             Couldn't load this chapter. It may have been removed upstream.
           </p>
         )}
-        {data?.pages.map((src, i) => (
+        {data?.pages.map((src: string, i: number) => (
           <img
             key={src}
             src={src}

@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery, useServerFn } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { Search, Flame, BookOpen } from "lucide-react";
 import { searchManhua } from "@/lib/mangadex.functions";
@@ -125,7 +126,7 @@ function Home() {
         )}
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-          {data?.manga.map((m) => (
+          {data?.manga.map((m: import("@/lib/mangadex.functions").MangaSummary) => (
             <Link
               key={m.id}
               to="/title/$mangaId"
@@ -152,7 +153,7 @@ function Home() {
                 </div>
               </div>
               <div className="mt-2 flex flex-wrap gap-1">
-                {m.tags.slice(0, 2).map((t) => (
+                {m.tags.slice(0, 2).map((t: string) => (
                   <Badge key={t} variant="secondary" className="text-[10px]">
                     {t}
                   </Badge>

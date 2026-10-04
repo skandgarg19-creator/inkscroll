@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery, useServerFn, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { Bookmark, BookmarkCheck, BookOpen, ChevronRight } from "lucide-react";
 import { getManhua, getChapters } from "@/lib/mangadex.functions";
@@ -112,7 +113,7 @@ function TitlePage() {
               </Badge>
             )}
             {manga.year && <Badge variant="outline">{manga.year}</Badge>}
-            {manga.tags.map((t) => (
+            {manga.tags.map((t: string) => (
               <Badge key={t} variant="secondary">
                 {t}
               </Badge>
@@ -166,7 +167,7 @@ function TitlePage() {
         </p>
       )}
       <div className="divide-y divide-border rounded-lg border border-border bg-card">
-        {chapters?.map((c) => (
+        {chapters?.map((c: import("@/lib/mangadex.functions").ChapterSummary) => (
           <Link
             key={c.id}
             to="/read/$chapterId"
