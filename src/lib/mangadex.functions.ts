@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 
-const API = "https://api.manga-dex.org";
+const API = "https://api.mangadex.org";
 const UA = { "User-Agent": "InkScroll/1.0" };
 
 export interface MangaSummary {
