@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { Search, Flame, BookOpen } from "lucide-react";
 import { searchManhua } from "@/lib/mangadex.functions";
+import heroArt from "@/assets/hero-manhua.png";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
