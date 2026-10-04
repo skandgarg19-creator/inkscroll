@@ -127,7 +127,7 @@ function TitlePage() {
               <Button asChild>
                 <Link
                   to="/read/$chapterId"
-                  params={{ chapterId: chapters[chapters.length - 1].id }}
+                  params={{ chapterId: chapters.at(-1)!.id }}
                   search={{
                     mangaId,
                     title: manga.title,

@@ -37,7 +37,7 @@ function Home() {
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["manhua", submitted],
-    queryFn: () => fetchManhua({ data: { query: submitted || undefined } }),
+    queryFn: () => fetchManhua({ data: submitted ? { query: submitted } : {} }),
   });
 
   return (
