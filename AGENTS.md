@@ -8,3 +8,6 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+## Content API
+- Manhua data comes from MangaDex via the api.mangadex.org alias (api.manga-dex.org is blocked from the sandbox network; the alias serves the identical API). Cover/page images come from uploads.mangadex.org.
