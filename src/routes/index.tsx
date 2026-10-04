@@ -52,7 +52,8 @@ function Home() {
               "radial-gradient(60% 80% at 70% 10%, oklch(0.58 0.21 27 / 0.25), transparent 70%)",
           }}
         />
-        <div className="relative mx-auto max-w-6xl px-4 py-16 sm:py-24">
+        <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 py-16 sm:py-24 lg:grid-cols-[1.2fr_1fr]">
+          <div>
           <div className="flex items-center gap-2 text-primary">
             <Flame className="h-5 w-5" />
             <span className="text-sm font-semibold uppercase tracking-widest">
