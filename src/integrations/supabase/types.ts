@@ -14,7 +14,87 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bookmarks: {
+        Row: {
+          cover_url: string | null
+          created_at: string
+          id: string
+          manga_id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          cover_url?: string | null
+          created_at?: string
+          id?: string
+          manga_id: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          cover_url?: string | null
+          created_at?: string
+          id?: string
+          manga_id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          id: string
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          id: string
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
+      reading_history: {
+        Row: {
+          chapter_id: string
+          chapter_label: string
+          cover_url: string | null
+          id: string
+          manga_id: string
+          manga_title: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          chapter_id: string
+          chapter_label: string
+          cover_url?: string | null
+          id?: string
+          manga_id: string
+          manga_title: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          chapter_id?: string
+          chapter_label?: string
+          cover_url?: string | null
+          id?: string
+          manga_id?: string
+          manga_title?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
