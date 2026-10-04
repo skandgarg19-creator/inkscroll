@@ -26,9 +26,17 @@ function mapManga(m: any): MangaSummary {
   const cover = m.relationships?.find((r: any) => r.type === "cover_art");
   const fileName = cover?.attributes?.fileName;
   const titles = m.attributes?.title ?? {};
+  const altTitles: any[] = m.attributes?.altTitles ?? [];
+  const altEn = altTitles.find((t: any) => t?.en)?.en;
+  const title =
+    titles.en ??
+    altEn ??
+    titles["zh-ro"] ??
+    Object.values(titles)[0] ??
+    "Untitled";
   return {
     id: m.id,
-    title: titles.en ?? titles["zh-ro"] ?? Object.values(titles)[0] ?? "Untitled",
+    title,
     coverUrl: fileName
       ? `https://uploads.mangadex.org/covers/${m.id}/${fileName}.512.jpg`
       : null,
