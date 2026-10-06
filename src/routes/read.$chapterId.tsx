@@ -95,15 +95,8 @@ function ReaderPage() {
             Couldn't load this chapter. It may have been removed upstream.
           </p>
         )}
-        {data?.pages.map((src: string, i: number) => (
-          <img
-            key={src}
-            src={src}
-            alt={`Page ${i + 1}`}
-            loading="lazy"
-            referrerPolicy="no-referrer"
-            className="mx-auto w-full max-w-2xl"
-          />
+        {data?.pages.map((p, i) => (
+          <PageImage key={p.original} page={p} index={i} />
         ))}
 
         {data && (

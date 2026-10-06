@@ -120,7 +120,13 @@ export const getChapterPages = createServerFn({ method: "GET" })
     const baseUrl: string = json.baseUrl;
     const hash: string = json.chapter.hash;
     const files: string[] = json.chapter.data ?? [];
+    const saver: string[] = json.chapter.dataSaver ?? [];
+    const fallback = "https://uploads.mangadex.org";
     return {
-      pages: files.map((f) => `${baseUrl}/data/${hash}/${f}`),
+      pages: files.map((f, i) => ({
+        saver: saver[i] ? `${baseUrl}/data-saver/${hash}/${saver[i]}` : null,
+        original: `${baseUrl}/data/${hash}/${f}`,
+        fallback: `${fallback}/data/${hash}/${f}`,
+      })),
     };
   });
