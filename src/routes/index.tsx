@@ -29,7 +29,7 @@ export const Route = createFileRoute("/")({
     ],
   }),
   validateSearch: (s: Record<string, unknown>): { genre?: string } =>
-    typeof s.genre === "string" && s.genre ? { genre: s.genre } : {},
+    typeof s["genre"] === "string" && s["genre"] ? { genre: s["genre"] } : {},
   component: Home,
 });
 
