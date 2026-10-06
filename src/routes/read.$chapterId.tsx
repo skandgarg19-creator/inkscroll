@@ -101,6 +101,7 @@ function ReaderPage() {
             src={src}
             alt={`Page ${i + 1}`}
             loading="lazy"
+            referrerPolicy="no-referrer"
             className="mx-auto w-full max-w-2xl"
           />
         ))}

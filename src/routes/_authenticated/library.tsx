@@ -95,6 +95,7 @@ function LibraryPage() {
                       <img
                         src={b.cover_url}
                         alt={b.title}
+                        referrerPolicy="no-referrer"
                         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
                     ) : (
@@ -145,7 +146,7 @@ function LibraryPage() {
               >
                 <div className="h-16 w-11 shrink-0 overflow-hidden rounded bg-muted">
                   {h.cover_url && (
-                    <img src={h.cover_url} alt="" className="h-full w-full object-cover" />
+                    <img src={h.cover_url} alt="" referrerPolicy="no-referrer" className="h-full w-full object-cover" />
                   )}
                 </div>
                 <div className="min-w-0 flex-1">

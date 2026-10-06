@@ -97,7 +97,7 @@ function TitlePage() {
       <div className="flex flex-col gap-8 md:flex-row">
         <div className="w-48 shrink-0 overflow-hidden rounded-lg border border-border bg-card">
           {manga.coverUrl ? (
-            <img src={manga.coverUrl} alt={manga.title} className="w-full" />
+            <img src={manga.coverUrl} alt={manga.title} referrerPolicy="no-referrer" className="w-full" />
           ) : (
             <div className="flex aspect-[2/3] items-center justify-center text-muted-foreground">
               <BookOpen className="h-10 w-10" />
