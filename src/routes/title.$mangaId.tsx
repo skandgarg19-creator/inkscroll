@@ -114,9 +114,11 @@ function TitlePage() {
             )}
             {manga.year && <Badge variant="outline">{manga.year}</Badge>}
             {manga.tags.map((t: string) => (
-              <Badge key={t} variant="secondary">
-                {t}
-              </Badge>
+              <Link key={t} to="/" search={{ genre: t }}>
+                <Badge variant="secondary" className="cursor-pointer hover:bg-primary hover:text-primary-foreground">
+                  {t}
+                </Badge>
+              </Link>
             ))}
           </div>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground line-clamp-6">

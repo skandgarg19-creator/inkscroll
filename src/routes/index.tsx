@@ -28,18 +28,36 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
+  validateSearch: (s: Record<string, unknown>): { genre?: string } =>
+    typeof s["genre"] === "string" && s["genre"] ? { genre: s["genre"] } : {},
   component: Home,
 });
 
+const POPULAR_GENRES = [
+  "Action", "Fantasy", "Wuxia", "Romance", "Adventure", "Comedy",
+  "Drama", "Historical", "Isekai", "Mystery", "Horror", "Sci-Fi",
+];
+
 function Home() {
+  const { genre } = Route.useSearch();
+  const navigate = useNavigate({ from: "/" });
   const [query, setQuery] = useState("");
   const [submitted, setSubmitted] = useState("");
   const fetchManhua = useServerFn(searchManhua);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["manhua", submitted],
-    queryFn: () => fetchManhua({ data: submitted ? { query: submitted } : {} }),
+    queryKey: ["manhua", submitted, genre],
+    queryFn: () =>
+      fetchManhua({
+        data: {
+          ...(submitted ? { query: submitted } : {}),
+          ...(genre ? { genre } : {}),
+        },
+      }),
   });
+
+  const setGenre = (g?: string) =>
+    navigate({ search: g ? { genre: g } : {} });
 
   return (
     <div className="min-h-screen">
@@ -103,9 +121,32 @@ function Home() {
 
       {/* Grid */}
       <section className="mx-auto max-w-6xl px-4 py-10">
+        <div className="mb-6 flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            variant={!genre ? "default" : "secondary"}
+            onClick={() => setGenre()}
+          >
+            All
+          </Button>
+          {POPULAR_GENRES.map((g) => (
+            <Button
+              key={g}
+              size="sm"
+              variant={genre === g ? "default" : "secondary"}
+              onClick={() => setGenre(g)}
+            >
+              {g}
+            </Button>
+          ))}
+        </div>
         <div className="mb-6 flex items-center justify-between">
           <h2 className="font-display text-3xl">
-            {submitted ? `Results for “${submitted}”` : "Most followed"}
+            {submitted
+              ? `Results for “${submitted}”${genre ? ` in ${genre}` : ""}`
+              : genre
+                ? genre
+                : "Most followed"}
           </h2>
           {data && (
             <span className="text-sm text-muted-foreground">
