@@ -133,3 +133,52 @@ function ReaderPage() {
     </div>
   );
 }
+
+function PageImage({
+  page,
+  index,
+}: {
+  page: { saver: string | null; original: string; fallback: string };
+  index: number;
+}) {
+  const sources = [page.saver, page.original, page.fallback].filter(
+    (s): s is string => !!s
+  );
+  const [attempt, setAttempt] = useState(0);
+  const [failed, setFailed] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const src = sources[attempt % sources.length];
+  const url = attempt >= sources.length ? `${src}?r=${attempt}` : src;
+
+  if (failed) {
+    return (
+      <button
+        onClick={() => {
+          setFailed(false);
+          setAttempt((a) => a + 1);
+        }}
+        className="mx-auto my-2 flex h-64 w-full max-w-2xl items-center justify-center rounded-md border border-border bg-card text-sm text-muted-foreground hover:text-foreground"
+      >
+        Page {index + 1} didn't load — tap to retry
+      </button>
+    );
+  }
+
+  return (
+    <div className={loaded ? "" : "mx-auto min-h-64 w-full max-w-2xl animate-pulse bg-card"}>
+      <img
+        key={url}
+        src={url}
+        alt={`Page ${index + 1}`}
+        loading={index < 3 ? "eager" : "lazy"}
+        referrerPolicy="no-referrer"
+        onLoad={() => setLoaded(true)}
+        onError={() => {
+          if (attempt < sources.length * 2 - 1) setAttempt((a) => a + 1);
+          else setFailed(true);
+        }}
+        className="mx-auto w-full max-w-2xl"
+      />
+    </div>
+  );
+}
