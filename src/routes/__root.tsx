@@ -162,6 +162,9 @@ function Header() {
           </span>
         </Link>
         <nav className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/genres">Genres</Link>
+          </Button>
           {signedIn ? (
             <>
               <Button variant="ghost" size="sm" asChild>
