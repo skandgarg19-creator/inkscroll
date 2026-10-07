@@ -120,29 +120,45 @@ export const getManhua = createServerFn({ method: "GET" })
 export const getChapters = createServerFn({ method: "GET" })
   .inputValidator((data: { mangaId: string }) => data)
   .handler(async ({ data }) => {
-    const params = new URLSearchParams();
-    params.set("manga", data.mangaId);
-    params.append("translatedLanguage[]", "en");
-    params.append("contentRating[]", "safe");
-    params.append("contentRating[]", "suggestive");
-    params.set("order[chapter]", "desc");
-    params.set("limit", "100");
-    const json = await mdFetch(`/chapter?${params.toString()}`);
-    const chapters: ChapterSummary[] = (json.data ?? []).map((c: any) => ({
-      id: c.id,
-      chapter: c.attributes?.chapter ?? null,
-      title: c.attributes?.title ?? null,
-      pages: c.attributes?.pages ?? 0,
-      publishAt: c.attributes?.publishAt ?? "",
-    }));
-    // De-duplicate: keep first (latest group) per chapter number
+    const all: any[] = [];
+    let offset = 0;
+    for (let i = 0; i < 6; i++) {
+      const params = new URLSearchParams();
+      params.append("translatedLanguage[]", "en");
+      params.append("contentRating[]", "safe");
+      params.append("contentRating[]", "suggestive");
+      params.set("order[chapter]", "asc");
+      params.set("limit", "500");
+      params.set("offset", String(offset));
+      const json = await mdFetch(`/manga/${data.mangaId}/feed?${params.toString()}`);
+      const batch = json.data ?? [];
+      all.push(...batch);
+      offset += batch.length;
+      if (batch.length === 0 || offset >= (json.total ?? 0)) break;
+    }
+    const chapters: ChapterSummary[] = all
+      .filter((c: any) => !c.attributes?.externalUrl && (c.attributes?.pages ?? 0) > 0)
+      .map((c: any) => ({
+        id: c.id,
+        chapter: c.attributes?.chapter ?? null,
+        title: c.attributes?.title ?? null,
+        pages: c.attributes?.pages ?? 0,
+        publishAt: c.attributes?.publishAt ?? "",
+      }));
+    const num = (c: ChapterSummary) => {
+      const n = parseFloat(c.chapter ?? "");
+      return Number.isFinite(n) ? n : Number.MAX_SAFE_INTEGER;
+    };
+    chapters.sort((a, b) => num(a) - num(b));
     const seen = new Set<string>();
-    return chapters.filter((c) => {
+    const unique = chapters.filter((c) => {
       const key = c.chapter ?? c.id;
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
     });
+    // Return newest first (desc) to keep existing consumers working
+    return unique.reverse();
   });
 
 export const getChapterPages = createServerFn({ method: "GET" })

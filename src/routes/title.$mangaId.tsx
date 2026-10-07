@@ -27,6 +27,7 @@ function TitlePage() {
   const fetchChapters = useServerFn(getChapters);
   const queryClient = useQueryClient();
   const [userId, setUserId] = useState<string | null>(null);
+  const [oldestFirst, setOldestFirst] = useState(true);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
@@ -155,7 +156,12 @@ function TitlePage() {
         </div>
       </div>
 
-      <h2 className="font-display mt-12 mb-4 text-3xl">Chapters</h2>
+      <div className="mt-12 mb-4 flex items-center justify-between">
+        <h2 className="font-display text-3xl">Chapters</h2>
+        <Button variant="outline" size="sm" onClick={() => setOldestFirst((v) => !v)}>
+          {oldestFirst ? "Oldest first" : "Newest first"}
+        </Button>
+      </div>
       {!chapters && (
         <div className="space-y-2">
           {Array.from({ length: 8 }).map((_, i) => (
@@ -169,7 +175,7 @@ function TitlePage() {
         </p>
       )}
       <div className="divide-y divide-border rounded-lg border border-border bg-card">
-        {chapters?.map((c: import("@/lib/mangadex.functions").ChapterSummary) => (
+        {(oldestFirst ? [...(chapters ?? [])].reverse() : chapters)?.map((c: import("@/lib/mangadex.functions").ChapterSummary) => (
           <Link
             key={c.id}
             to="/read/$chapterId"
