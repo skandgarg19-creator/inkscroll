@@ -45,6 +45,30 @@ function ReaderPage() {
     queryFn: () => fetchChapters({ data: { mangaId } }),
   });
 
+  // Track which page is on screen
+  useEffect(() => {
+    if (!data) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            setCurrentPage(Number((e.target as HTMLElement).dataset.page));
+          }
+        }
+      },
+      { rootMargin: "-40% 0px -40% 0px" }
+    );
+    document
+      .querySelectorAll("[data-page]")
+      .forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [data]);
+
+  const scrollToPage = (n: number) => {
+    document.getElementById(`page-${n}`)?.scrollIntoView({ behavior: "smooth" });
+    setCurrentPage(n);
+  };
+
   // Record reading history once pages load
   useEffect(() => {
     if (!userId || !data || !mangaId) return;
@@ -133,6 +157,32 @@ function ReaderPage() {
           </div>
         )}
       </div>
+
+      {data && data.pages.length > 1 && (
+        <div className="fixed bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full border border-border bg-card/95 px-3 py-2 shadow-lg backdrop-blur">
+          <button
+            onClick={() => scrollToPage(Math.max(1, currentPage - 1))}
+            disabled={currentPage <= 1}
+            aria-label="Previous page"
+            className="rounded-full p-1.5 hover:bg-accent disabled:opacity-30"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <span className="min-w-16 text-center text-sm font-medium tabular-nums">
+            {currentPage} / {data.pages.length}
+          </span>
+          <button
+            onClick={() =>
+              scrollToPage(Math.min(data.pages.length, currentPage + 1))
+            }
+            disabled={currentPage >= data.pages.length}
+            aria-label="Next page"
+            className="rounded-full p-1.5 hover:bg-accent disabled:opacity-30"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
