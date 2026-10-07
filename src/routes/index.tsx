@@ -75,7 +75,7 @@ function Home() {
     navigate({ search: g ? { genre: g } : {} });
 
   const goPage = (p: number) => {
-    navigate({ search: (prev) => ({ ...prev, page: p > 1 ? p : undefined }) });
+    navigate({ search: (prev) => (p > 1 ? { ...prev, page: p } : { genre: prev.genre }) });
     document.getElementById("catalog")?.scrollIntoView({ behavior: "smooth" });
   };
 
@@ -112,7 +112,7 @@ function Home() {
             onSubmit={(e) => {
               e.preventDefault();
               setSubmitted(query.trim());
-              navigate({ search: (prev) => ({ ...prev, page: undefined }) });
+              navigate({ search: (prev) => ({ genre: prev.genre }) });
             }}
           >
             <div className="relative flex-1">
