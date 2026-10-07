@@ -112,6 +112,7 @@ function Home() {
             onSubmit={(e) => {
               e.preventDefault();
               setSubmitted(query.trim());
+              navigate({ search: (prev) => ({ ...prev, page: undefined }) });
             }}
           >
             <div className="relative flex-1">
@@ -140,7 +141,7 @@ function Home() {
       </section>
 
       {/* Grid */}
-      <section className="mx-auto max-w-6xl px-4 py-10">
+      <section id="catalog" className="mx-auto max-w-6xl scroll-mt-4 px-4 py-10">
         <div className="mb-6 flex flex-wrap gap-2">
           <Button
             size="sm"
