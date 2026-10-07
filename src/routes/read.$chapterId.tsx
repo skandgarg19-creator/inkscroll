@@ -28,6 +28,7 @@ function ReaderPage() {
   const fetchPages = useServerFn(getChapterPages);
   const fetchChapters = useServerFn(getChapters);
   const [userId, setUserId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
@@ -96,7 +97,9 @@ function ReaderPage() {
           </p>
         )}
         {data?.pages.map((p, i) => (
-          <PageImage key={p.original} page={p} index={i} />
+          <div key={p.original} id={`page-${i + 1}`} data-page={i + 1}>
+            <PageImage page={p} index={i} />
+          </div>
         ))}
 
         {data && (
