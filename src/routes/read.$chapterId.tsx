@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { getChapterPages, getChapters } from "@/lib/mangadex.functions";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -28,6 +28,7 @@ function ReaderPage() {
   const fetchPages = useServerFn(getChapterPages);
   const fetchChapters = useServerFn(getChapters);
   const [userId, setUserId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
@@ -43,6 +44,30 @@ function ReaderPage() {
     enabled: !!mangaId,
     queryFn: () => fetchChapters({ data: { mangaId } }),
   });
+
+  // Track which page is on screen
+  useEffect(() => {
+    if (!data) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            setCurrentPage(Number((e.target as HTMLElement).dataset["page"]));
+          }
+        }
+      },
+      { rootMargin: "-40% 0px -40% 0px" }
+    );
+    document
+      .querySelectorAll("[data-page]")
+      .forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [data]);
+
+  const scrollToPage = (n: number) => {
+    document.getElementById(`page-${n}`)?.scrollIntoView({ behavior: "smooth" });
+    setCurrentPage(n);
+  };
 
   // Record reading history once pages load
   useEffect(() => {
@@ -96,7 +121,9 @@ function ReaderPage() {
           </p>
         )}
         {data?.pages.map((p, i) => (
-          <PageImage key={p.original} page={p} index={i} />
+          <div key={p.original} id={`page-${i + 1}`} data-page={i + 1}>
+            <PageImage page={p} index={i} />
+          </div>
         ))}
 
         {data && (
@@ -130,6 +157,32 @@ function ReaderPage() {
           </div>
         )}
       </div>
+
+      {data && data.pages.length > 1 && (
+        <div className="fixed bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full border border-border bg-card/95 px-3 py-2 shadow-lg backdrop-blur">
+          <button
+            onClick={() => scrollToPage(Math.max(1, currentPage - 1))}
+            disabled={currentPage <= 1}
+            aria-label="Previous page"
+            className="rounded-full p-1.5 hover:bg-accent disabled:opacity-30"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <span className="min-w-16 text-center text-sm font-medium tabular-nums">
+            {currentPage} / {data.pages.length}
+          </span>
+          <button
+            onClick={() =>
+              scrollToPage(Math.min(data.pages.length, currentPage + 1))
+            }
+            disabled={currentPage >= data.pages.length}
+            aria-label="Next page"
+            className="rounded-full p-1.5 hover:bg-accent disabled:opacity-30"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
