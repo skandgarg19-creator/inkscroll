@@ -28,10 +28,19 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  validateSearch: (s: Record<string, unknown>): { genre?: string } =>
-    typeof s["genre"] === "string" && s["genre"] ? { genre: s["genre"] } : {},
+  validateSearch: (s: Record<string, unknown>): { genre?: string; page?: number } => {
+    const out: { genre?: string; page?: number } = {};
+    if (typeof s["genre"] === "string" && s["genre"]) out.genre = s["genre"];
+    const p = Number(s["page"]);
+    if (Number.isFinite(p) && p > 1) out.page = Math.floor(p);
+    return out;
+  },
   component: Home,
 });
+
+const PAGE_SIZE = 24;
+// MangaDex caps offset + limit at 10,000
+const MAX_PAGES = Math.floor(10000 / PAGE_SIZE);
 
 const POPULAR_GENRES = [
   "Action", "Fantasy", "Wuxia", "Romance", "Adventure", "Comedy",
@@ -39,25 +48,36 @@ const POPULAR_GENRES = [
 ];
 
 function Home() {
-  const { genre } = Route.useSearch();
+  const { genre, page: rawPage } = Route.useSearch();
+  const page = rawPage ?? 1;
   const navigate = useNavigate({ from: "/" });
   const [query, setQuery] = useState("");
   const [submitted, setSubmitted] = useState("");
   const fetchManhua = useServerFn(searchManhua);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["manhua", submitted, genre],
+    queryKey: ["manhua", submitted, genre, page],
     queryFn: () =>
       fetchManhua({
         data: {
           ...(submitted ? { query: submitted } : {}),
           ...(genre ? { genre } : {}),
+          offset: (page - 1) * PAGE_SIZE,
         },
       }),
   });
 
+  const totalPages = data
+    ? Math.min(MAX_PAGES, Math.max(1, Math.ceil(data.total / PAGE_SIZE)))
+    : 1;
+
   const setGenre = (g?: string) =>
     navigate({ search: g ? { genre: g } : {} });
+
+  const goPage = (p: number) => {
+    navigate({ search: { ...(genre ? { genre } : {}), ...(p > 1 ? { page: p } : {}) } });
+    document.getElementById("catalog")?.scrollIntoView({ behavior: "smooth" });
+  };
 
   return (
     <div className="min-h-screen">
@@ -92,6 +112,7 @@ function Home() {
             onSubmit={(e) => {
               e.preventDefault();
               setSubmitted(query.trim());
+              navigate({ search: genre ? { genre } : {} });
             }}
           >
             <div className="relative flex-1">
@@ -120,7 +141,7 @@ function Home() {
       </section>
 
       {/* Grid */}
-      <section className="mx-auto max-w-6xl px-4 py-10">
+      <section id="catalog" className="mx-auto max-w-6xl scroll-mt-4 px-4 py-10">
         <div className="mb-6 flex flex-wrap gap-2">
           <Button
             size="sm"
@@ -217,6 +238,28 @@ function Home() {
             </Link>
           ))}
         </div>
+
+        {data && data.total > PAGE_SIZE && (
+          <div className="mt-10 flex items-center justify-center gap-3">
+            <Button
+              variant="secondary"
+              disabled={page <= 1}
+              onClick={() => goPage(page - 1)}
+            >
+              ‹ Previous
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              Page {page} of {totalPages}
+            </span>
+            <Button
+              variant="secondary"
+              disabled={page >= totalPages}
+              onClick={() => goPage(page + 1)}
+            >
+              Next ›
+            </Button>
+          </div>
+        )}
       </section>
     </div>
   );
