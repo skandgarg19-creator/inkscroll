@@ -52,7 +52,7 @@ function ReaderPage() {
       (entries) => {
         for (const e of entries) {
           if (e.isIntersecting) {
-            setCurrentPage(Number((e.target as HTMLElement).dataset.page));
+            setCurrentPage(Number((e.target as HTMLElement).dataset["page"]));
           }
         }
       },
