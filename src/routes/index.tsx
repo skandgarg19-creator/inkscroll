@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { Search, Flame, BookOpen } from "lucide-react";
-import { searchManhua } from "@/lib/mangadex.functions";
+import { searchManhua, SORTS, STATUSES } from "@/lib/mangadex.functions";
 import heroArt from "@/assets/hero-manhua.png";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -28,9 +28,13 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  validateSearch: (s: Record<string, unknown>): { genre?: string; page?: number } => {
-    const out: { genre?: string; page?: number } = {};
+  validateSearch: (
+    s: Record<string, unknown>,
+  ): { genre?: string; page?: number; sort?: string; status?: string } => {
+    const out: { genre?: string; page?: number; sort?: string; status?: string } = {};
     if (typeof s["genre"] === "string" && s["genre"]) out.genre = s["genre"];
+    if (typeof s["sort"] === "string" && s["sort"]) out.sort = s["sort"];
+    if (typeof s["status"] === "string" && s["status"]) out.status = s["status"];
     const p = Number(s["page"]);
     if (Number.isFinite(p) && p > 1) out.page = Math.floor(p);
     return out;
@@ -48,20 +52,23 @@ const POPULAR_GENRES = [
 ];
 
 function Home() {
-  const { genre, page: rawPage } = Route.useSearch();
+  const { genre, page: rawPage, sort, status } = Route.useSearch();
   const page = rawPage ?? 1;
+  const activeSort = sort && sort in SORTS ? sort : "Most followed";
   const navigate = useNavigate({ from: "/" });
   const [query, setQuery] = useState("");
   const [submitted, setSubmitted] = useState("");
   const fetchManhua = useServerFn(searchManhua);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["manhua", submitted, genre, page],
+    queryKey: ["manhua", submitted, genre, page, activeSort, status],
     queryFn: () =>
       fetchManhua({
         data: {
           ...(submitted ? { query: submitted } : {}),
           ...(genre ? { genre } : {}),
+          ...(status ? { status } : {}),
+          sort: activeSort,
           offset: (page - 1) * PAGE_SIZE,
         },
       }),
@@ -71,11 +78,30 @@ function Home() {
     ? Math.min(MAX_PAGES, Math.max(1, Math.ceil(data.total / PAGE_SIZE)))
     : 1;
 
-  const setGenre = (g?: string) =>
-    navigate({ search: g ? { genre: g } : {} });
+  const buildSearch = (overrides: {
+    genre?: string | undefined;
+    page?: number;
+    sort?: string;
+    status?: string | undefined;
+  }) => {
+    const g = overrides.genre !== undefined ? overrides.genre : genre;
+    const p = overrides.page ?? 1;
+    const so = overrides.sort !== undefined ? overrides.sort : activeSort;
+    const st = overrides.status !== undefined ? overrides.status : status;
+    return {
+      ...(g ? { genre: g } : {}),
+      ...(p > 1 ? { page: p } : {}),
+      ...(so && so !== "Most followed" ? { sort: so } : {}),
+      ...(st ? { status: st } : {}),
+    };
+  };
+
+  const setGenre = (g?: string) => navigate({ search: buildSearch({ genre: g }) });
+  const setStatus = (st?: string) => navigate({ search: buildSearch({ status: st }) });
+  const setSort = (so: string) => navigate({ search: buildSearch({ sort: so }) });
 
   const goPage = (p: number) => {
-    navigate({ search: { ...(genre ? { genre } : {}), ...(p > 1 ? { page: p } : {}) } });
+    navigate({ search: buildSearch({ page: p }) });
     document.getElementById("catalog")?.scrollIntoView({ behavior: "smooth" });
   };
 
@@ -112,7 +138,7 @@ function Home() {
             onSubmit={(e) => {
               e.preventDefault();
               setSubmitted(query.trim());
-              navigate({ search: genre ? { genre } : {} });
+              navigate({ search: buildSearch({}) });
             }}
           >
             <div className="relative flex-1">
@@ -160,6 +186,44 @@ function Home() {
               {g}
             </Button>
           ))}
+        </div>
+        <div className="mb-6 flex flex-wrap items-center gap-2">
+          <span className="text-sm text-muted-foreground">Status:</span>
+          <Button
+            size="sm"
+            variant={!status ? "default" : "secondary"}
+            onClick={() => setStatus()}
+          >
+            Any
+          </Button>
+          {STATUSES.map((st) => (
+            <Button
+              key={st}
+              size="sm"
+              variant={status === st ? "default" : "secondary"}
+              onClick={() => setStatus(st)}
+              className="capitalize"
+            >
+              {st}
+            </Button>
+          ))}
+          <div className="ml-auto flex items-center gap-2">
+            <label htmlFor="sort" className="text-sm text-muted-foreground">
+              Sort by
+            </label>
+            <select
+              id="sort"
+              value={activeSort}
+              onChange={(e) => setSort(e.target.value)}
+              className="h-8 rounded-md border border-input bg-card px-2 text-sm text-foreground"
+            >
+              {Object.keys(SORTS).map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         <div className="mb-6 flex items-center justify-between">
           <h2 className="font-display text-3xl">
