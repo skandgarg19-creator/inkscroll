@@ -78,11 +78,30 @@ function Home() {
     ? Math.min(MAX_PAGES, Math.max(1, Math.ceil(data.total / PAGE_SIZE)))
     : 1;
 
-  const setGenre = (g?: string) =>
-    navigate({ search: g ? { genre: g } : {} });
+  const buildSearch = (overrides: {
+    genre?: string;
+    page?: number;
+    sort?: string;
+    status?: string;
+  }) => {
+    const g = overrides.genre !== undefined ? overrides.genre : genre;
+    const p = overrides.page ?? 1;
+    const so = overrides.sort !== undefined ? overrides.sort : activeSort;
+    const st = overrides.status !== undefined ? overrides.status : status;
+    return {
+      ...(g ? { genre: g } : {}),
+      ...(p > 1 ? { page: p } : {}),
+      ...(so && so !== "Most followed" ? { sort: so } : {}),
+      ...(st ? { status: st } : {}),
+    };
+  };
+
+  const setGenre = (g?: string) => navigate({ search: buildSearch({ genre: g }) });
+  const setStatus = (st?: string) => navigate({ search: buildSearch({ status: st }) });
+  const setSort = (so: string) => navigate({ search: buildSearch({ sort: so }) });
 
   const goPage = (p: number) => {
-    navigate({ search: { ...(genre ? { genre } : {}), ...(p > 1 ? { page: p } : {}) } });
+    navigate({ search: buildSearch({ page: p }) });
     document.getElementById("catalog")?.scrollIntoView({ behavior: "smooth" });
   };
 
