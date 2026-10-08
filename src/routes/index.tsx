@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { Search, Flame, BookOpen } from "lucide-react";
-import { searchManhua } from "@/lib/mangadex.functions";
+import { searchManhua, SORTS, STATUSES } from "@/lib/mangadex.functions";
 import heroArt from "@/assets/hero-manhua.png";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -52,20 +52,23 @@ const POPULAR_GENRES = [
 ];
 
 function Home() {
-  const { genre, page: rawPage } = Route.useSearch();
+  const { genre, page: rawPage, sort, status } = Route.useSearch();
   const page = rawPage ?? 1;
+  const activeSort = sort && sort in SORTS ? sort : "Most followed";
   const navigate = useNavigate({ from: "/" });
   const [query, setQuery] = useState("");
   const [submitted, setSubmitted] = useState("");
   const fetchManhua = useServerFn(searchManhua);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["manhua", submitted, genre, page],
+    queryKey: ["manhua", submitted, genre, page, activeSort, status],
     queryFn: () =>
       fetchManhua({
         data: {
           ...(submitted ? { query: submitted } : {}),
           ...(genre ? { genre } : {}),
+          ...(status ? { status } : {}),
+          sort: activeSort,
           offset: (page - 1) * PAGE_SIZE,
         },
       }),
