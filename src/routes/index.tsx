@@ -28,9 +28,13 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  validateSearch: (s: Record<string, unknown>): { genre?: string; page?: number } => {
-    const out: { genre?: string; page?: number } = {};
+  validateSearch: (
+    s: Record<string, unknown>,
+  ): { genre?: string; page?: number; sort?: string; status?: string } => {
+    const out: { genre?: string; page?: number; sort?: string; status?: string } = {};
     if (typeof s["genre"] === "string" && s["genre"]) out.genre = s["genre"];
+    if (typeof s["sort"] === "string" && s["sort"]) out.sort = s["sort"];
+    if (typeof s["status"] === "string" && s["status"]) out.status = s["status"];
     const p = Number(s["page"]);
     if (Number.isFinite(p) && p > 1) out.page = Math.floor(p);
     return out;
