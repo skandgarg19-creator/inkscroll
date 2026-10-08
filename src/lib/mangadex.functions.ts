@@ -85,9 +85,25 @@ export const GENRES: Record<string, string> = {
   "Magical Girls": "81c836c9-914a-4eca-981a-560dad663e73",
 };
 
+export const SORTS: Record<string, [string, string]> = {
+  "Most followed": ["followedCount", "desc"],
+  "Recently updated": ["latestUploadedChapter", "desc"],
+  "Top rated": ["rating", "desc"],
+  "Newest": ["createdAt", "desc"],
+  "Title A–Z": ["title", "asc"],
+};
+
+export const STATUSES = ["ongoing", "completed", "hiatus", "cancelled"] as const;
+
 export const searchManhua = createServerFn({ method: "GET" })
   .inputValidator(
-    (data: { query?: string; offset?: number; genre?: string }) => data ?? {},
+    (data: {
+      query?: string;
+      offset?: number;
+      genre?: string;
+      sort?: string;
+      status?: string;
+    }) => data ?? {},
   )
   .handler(async ({ data }) => {
     const params = new URLSearchParams();
@@ -97,12 +113,16 @@ export const searchManhua = createServerFn({ method: "GET" })
     params.append("includes[]", "cover_art");
     params.append("contentRating[]", "safe");
     params.append("contentRating[]", "suggestive");
-    params.set("order[followedCount]", "desc");
+    const [sortKey, sortDir] = SORTS[data?.sort ?? ""] ?? SORTS["Most followed"];
+    params.set(`order[${sortKey}]`, sortDir);
     params.set("hasAvailableChapters", "true");
     params.append("availableTranslatedLanguage[]", "en");
     if (data?.query) params.set("title", data.query);
     const tagId = data?.genre ? GENRES[data.genre] : undefined;
     if (tagId) params.append("includedTags[]", tagId);
+    if (data?.status && (STATUSES as readonly string[]).includes(data.status)) {
+      params.append("status[]", data.status);
+    }
     const json = await mdFetch(`/manga?${params.toString()}`);
     return {
       manga: (json.data ?? []).map(mapManga) as MangaSummary[],
