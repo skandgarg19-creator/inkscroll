@@ -113,7 +113,8 @@ export const searchManhua = createServerFn({ method: "GET" })
     params.append("includes[]", "cover_art");
     params.append("contentRating[]", "safe");
     params.append("contentRating[]", "suggestive");
-    const [sortKey, sortDir] = SORTS[data?.sort ?? ""] ?? SORTS["Most followed"];
+    const [sortKey, sortDir] =
+      SORTS[data?.sort ?? ""] ?? (["followedCount", "desc"] as [string, string]);
     params.set(`order[${sortKey}]`, sortDir);
     params.set("hasAvailableChapters", "true");
     params.append("availableTranslatedLanguage[]", "en");

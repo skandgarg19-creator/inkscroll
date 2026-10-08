@@ -79,10 +79,10 @@ function Home() {
     : 1;
 
   const buildSearch = (overrides: {
-    genre?: string;
+    genre?: string | undefined;
     page?: number;
     sort?: string;
-    status?: string;
+    status?: string | undefined;
   }) => {
     const g = overrides.genre !== undefined ? overrides.genre : genre;
     const p = overrides.page ?? 1;
