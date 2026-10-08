@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
@@ -29,6 +29,12 @@ function ReaderPage() {
   const fetchChapters = useServerFn(getChapters);
   const [userId, setUserId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    setCurrentPage(1);
+  }, [chapterId]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
@@ -105,7 +111,47 @@ function ReaderPage() {
           >
             <ArrowLeft className="h-4 w-4" /> Back
           </Link>
-          <span className="truncate text-sm font-semibold">{title}</span>
+          <span className="hidden truncate text-sm font-semibold sm:inline">{title}</span>
+          {chapters && chapters.length > 0 && (
+            <div className="ml-auto flex items-center gap-1">
+              <button
+                disabled={!prevChapter}
+                aria-label="Previous chapter"
+                onClick={() =>
+                  prevChapter &&
+                  navigate({ to: "/read/$chapterId", params: { chapterId: prevChapter.id }, search: { mangaId, title, cover } })
+                }
+                className="rounded-md p-1.5 hover:bg-accent disabled:opacity-30"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <select
+                aria-label="Select chapter"
+                value={chapterId}
+                onChange={(e) =>
+                  navigate({ to: "/read/$chapterId", params: { chapterId: e.target.value }, search: { mangaId, title, cover } })
+                }
+                className="max-w-36 rounded-md border border-border bg-card px-2 py-1 text-sm text-foreground"
+              >
+                {[...chapters].reverse().map((c: { id: string; chapter?: string | null; title?: string | null }) => (
+                  <option key={c.id} value={c.id}>
+                    {c.chapter ? `Chapter ${c.chapter}` : c.title || "Oneshot"}
+                  </option>
+                ))}
+              </select>
+              <button
+                disabled={!nextChapter}
+                aria-label="Next chapter"
+                onClick={() =>
+                  nextChapter &&
+                  navigate({ to: "/read/$chapterId", params: { chapterId: nextChapter.id }, search: { mangaId, title, cover } })
+                }
+                className="rounded-md p-1.5 hover:bg-accent disabled:opacity-30"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
