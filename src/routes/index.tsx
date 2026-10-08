@@ -138,7 +138,7 @@ function Home() {
             onSubmit={(e) => {
               e.preventDefault();
               setSubmitted(query.trim());
-              navigate({ search: genre ? { genre } : {} });
+              navigate({ search: buildSearch({}) });
             }}
           >
             <div className="relative flex-1">
@@ -186,6 +186,44 @@ function Home() {
               {g}
             </Button>
           ))}
+        </div>
+        <div className="mb-6 flex flex-wrap items-center gap-2">
+          <span className="text-sm text-muted-foreground">Status:</span>
+          <Button
+            size="sm"
+            variant={!status ? "default" : "secondary"}
+            onClick={() => setStatus()}
+          >
+            Any
+          </Button>
+          {STATUSES.map((st) => (
+            <Button
+              key={st}
+              size="sm"
+              variant={status === st ? "default" : "secondary"}
+              onClick={() => setStatus(st)}
+              className="capitalize"
+            >
+              {st}
+            </Button>
+          ))}
+          <div className="ml-auto flex items-center gap-2">
+            <label htmlFor="sort" className="text-sm text-muted-foreground">
+              Sort by
+            </label>
+            <select
+              id="sort"
+              value={activeSort}
+              onChange={(e) => setSort(e.target.value)}
+              className="h-8 rounded-md border border-input bg-card px-2 text-sm text-foreground"
+            >
+              {Object.keys(SORTS).map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         <div className="mb-6 flex items-center justify-between">
           <h2 className="font-display text-3xl">
