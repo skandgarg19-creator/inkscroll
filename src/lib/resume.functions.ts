@@ -23,7 +23,7 @@ export const suggestResume = createServerFn({ method: "POST" })
     return { ...d, note: d.note.slice(0, 500), chapters: (d.chapters ?? []).slice(0, 1500) };
   })
   .handler(async ({ data, context }): Promise<ResumeSuggestion> => {
-    const apiKey = process.env.LOVABLE_API_KEY;
+    const apiKey = process.env["LOVABLE_API_KEY"];
     if (!apiKey) throw new Error("AI is not configured");
 
     const { data: history } = await context.supabase
