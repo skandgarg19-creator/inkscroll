@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { getChapterPages, getChapters } from "@/lib/mangadex.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { ResumeHelper } from "@/components/ResumeHelper";
 
 export const Route = createFileRoute("/read/$chapterId")({
   validateSearch: (search: Record<string, unknown>): {
