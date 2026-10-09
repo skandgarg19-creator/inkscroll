@@ -5,12 +5,19 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { getChapterPages, getChapters } from "@/lib/mangadex.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { ResumeHelper } from "@/components/ResumeHelper";
 
 export const Route = createFileRoute("/read/$chapterId")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): {
+    mangaId: string;
+    title: string;
+    cover: string;
+    page?: number;
+  } => ({
     mangaId: (search["mangaId"] as string) ?? "",
     title: (search["title"] as string) ?? "",
     cover: (search["cover"] as string) ?? "",
+    ...(Number(search["page"]) > 0 ? { page: Number(search["page"]) } : {}),
   }),
   head: () => ({
     meta: [
@@ -24,7 +31,7 @@ export const Route = createFileRoute("/read/$chapterId")({
 
 function ReaderPage() {
   const { chapterId } = Route.useParams();
-  const { mangaId, title, cover } = Route.useSearch();
+  const { mangaId, title, cover, page: startPage } = Route.useSearch();
   const fetchPages = useServerFn(getChapterPages);
   const fetchChapters = useServerFn(getChapters);
   const [userId, setUserId] = useState<string | null>(null);
@@ -74,6 +81,13 @@ function ReaderPage() {
     document.getElementById(`page-${n}`)?.scrollIntoView({ behavior: "smooth" });
     setCurrentPage(n);
   };
+
+  // Jump to a requested page (e.g. from an AI resume suggestion)
+  useEffect(() => {
+    if (!data || !startPage) return;
+    const t = setTimeout(() => scrollToPage(Math.min(startPage, data.pages.length)), 300);
+    return () => clearTimeout(t);
+  }, [data, startPage]);
 
   // Record reading history once pages load
   useEffect(() => {
@@ -155,6 +169,17 @@ function ReaderPage() {
         </div>
       </div>
 
+      {chapters && chapters.length > 0 && (
+        <ResumeHelper
+          signedIn={!!userId}
+          mangaId={mangaId}
+          title={title}
+          cover={cover}
+          chapterId={chapterId}
+          chapters={chapters}
+          onSamePage={(p: number) => scrollToPage(Math.min(p, data?.pages.length ?? p))}
+        />
+      )}
       <div className="mx-auto max-w-3xl px-2 py-4">
         {isLoading && (
           <div className="flex h-96 items-center justify-center text-muted-foreground">
