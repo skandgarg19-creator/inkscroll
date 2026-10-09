@@ -7,10 +7,16 @@ import { getChapterPages, getChapters } from "@/lib/mangadex.functions";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/read/$chapterId")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): {
+    mangaId: string;
+    title: string;
+    cover: string;
+    page?: number;
+  } => ({
     mangaId: (search["mangaId"] as string) ?? "",
     title: (search["title"] as string) ?? "",
     cover: (search["cover"] as string) ?? "",
+    ...(Number(search["page"]) > 0 ? { page: Number(search["page"]) } : {}),
   }),
   head: () => ({
     meta: [
@@ -24,7 +30,7 @@ export const Route = createFileRoute("/read/$chapterId")({
 
 function ReaderPage() {
   const { chapterId } = Route.useParams();
-  const { mangaId, title, cover } = Route.useSearch();
+  const { mangaId, title, cover, page: startPage } = Route.useSearch();
   const fetchPages = useServerFn(getChapterPages);
   const fetchChapters = useServerFn(getChapters);
   const [userId, setUserId] = useState<string | null>(null);
