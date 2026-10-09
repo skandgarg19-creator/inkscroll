@@ -32,6 +32,17 @@ export const suggestResume = createServerFn({ method: "POST" })
       .order("read_at", { ascending: false })
       .limit(20);
 
+    const { data: progress } = await context.supabase
+      .from("chapter_progress")
+      .select("chapter_label, last_page, total_pages, completed, updated_at")
+      .eq("manga_id", data.mangaId)
+      .order("updated_at", { ascending: false })
+      .limit(60);
+    const progressText =
+      (progress ?? [])
+        .map((p) => `Ch ${p.chapter_label || "?"}: page ${p.last_page}/${p.total_pages}${p.completed ? " (finished)" : " (unfinished)"}, last opened ${p.updated_at}`)
+        .join("\n") || "none";
+
     const byId = new Map(data.chapters.map((c) => [c.id, c.chapter]));
     const thisSeries = (history ?? []).find((h) => h.manga_id === data.mangaId);
     const current = byId.get(data.currentChapterId);
@@ -52,6 +63,7 @@ export const suggestResume = createServerFn({ method: "POST" })
       `Available chapter numbers (oldest to newest): ${data.chapters.map((c) => c.chapter ?? "?").join(", ")}`,
       `Chapter currently open: ${current ?? "unknown"}`,
       `Saved history for this series: ${thisSeries ? `${thisSeries.chapter_label} (read ${thisSeries.read_at})` : "none"}`,
+      `Per-chapter progress for this series (most recent first):\n${progressText}`,
       `Other recent reading: ${(history ?? []).filter((h) => h.manga_id !== data.mangaId).slice(0, 8).map((h) => `${h.manga_title} – ${h.chapter_label}`).join("; ") || "none"}`,
       `Reader's note: "${data.note || "(no note — just suggest where to resume)"}"`,
     ].join("\n");
@@ -59,7 +71,7 @@ export const suggestResume = createServerFn({ method: "POST" })
     const result = streamText({
       model: provider.responses("openai/gpt-6-astra"),
       instructions:
-        'You help a manhua reader decide where to resume. Use the reader note and saved history. Pick a chapter number that exists in the list. Reply with only JSON: {"chapter": "<chapter number as listed>", "page": <page number or null>, "reason": "<one or two friendly sentences>"}',
+        'You help a manhua reader decide where to resume. Use the per-chapter progress as the source of truth: if the most recently opened chapter is unfinished, resume there at its last page; if finished, suggest the next chapter at page 1. A reader note overrides this. Pick a chapter number that exists in the list. Reply with only JSON: {"chapter": "<chapter number as listed>", "page": <page number or null>, "reason": "<one or two friendly sentences>"}',
       messages: [{ role: "user", content: prompt }],
       providerOptions: {
         openai: {
