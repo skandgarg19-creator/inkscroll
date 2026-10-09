@@ -177,7 +177,7 @@ function ReaderPage() {
           cover={cover}
           chapterId={chapterId}
           chapters={chapters}
-          onSamePage={(p) => scrollToPage(Math.min(p, data?.pages.length ?? p))}
+          onSamePage={(p: number) => scrollToPage(Math.min(p, data?.pages.length ?? p))}
         />
       )}
       <div className="mx-auto max-w-3xl px-2 py-4">
