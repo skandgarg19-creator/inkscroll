@@ -168,6 +168,17 @@ function ReaderPage() {
         </div>
       </div>
 
+      {chapters && chapters.length > 0 && (
+        <ResumeHelper
+          signedIn={!!userId}
+          mangaId={mangaId}
+          title={title}
+          cover={cover}
+          chapterId={chapterId}
+          chapters={chapters}
+          onSamePage={(p) => scrollToPage(Math.min(p, data?.pages.length ?? p))}
+        />
+      )}
       <div className="mx-auto max-w-3xl px-2 py-4">
         {isLoading && (
           <div className="flex h-96 items-center justify-center text-muted-foreground">
