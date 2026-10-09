@@ -81,6 +81,13 @@ function ReaderPage() {
     setCurrentPage(n);
   };
 
+  // Jump to a requested page (e.g. from an AI resume suggestion)
+  useEffect(() => {
+    if (!data || !startPage) return;
+    const t = setTimeout(() => scrollToPage(Math.min(startPage, data.pages.length)), 300);
+    return () => clearTimeout(t);
+  }, [data, startPage]);
+
   // Record reading history once pages load
   useEffect(() => {
     if (!userId || !data || !mangaId) return;
