@@ -41,6 +41,42 @@ export type Database = {
         }
         Relationships: []
       }
+      chapter_progress: {
+        Row: {
+          chapter_id: string
+          chapter_label: string
+          completed: boolean
+          id: string
+          last_page: number
+          manga_id: string
+          total_pages: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          chapter_id: string
+          chapter_label?: string
+          completed?: boolean
+          id?: string
+          last_page?: number
+          manga_id: string
+          total_pages?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          chapter_id?: string
+          chapter_label?: string
+          completed?: boolean
+          id?: string
+          last_page?: number
+          manga_id?: string
+          total_pages?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
