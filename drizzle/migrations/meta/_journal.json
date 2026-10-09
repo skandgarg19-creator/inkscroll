@@ -8,6 +8,13 @@
       "when": 1791124446558,
       "tag": "0000_create_reader_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791514267340,
+      "tag": "0001_chapter_progress",
+      "breakpoints": true
     }
   ]
 }

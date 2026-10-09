@@ -108,6 +108,35 @@ function ReaderPage() {
     );
   }, [userId, data, mangaId, chapterId, title, cover, chapters]);
 
+  // Track per-chapter progress (furthest page reached)
+  useEffect(() => {
+    if (!userId || !data || !mangaId) return;
+    const total = data.pages.length;
+    const label = chapters?.find((c: { id: string }) => c.id === chapterId)?.chapter ?? "";
+    const t = setTimeout(async () => {
+      const { data: existing } = await supabase
+        .from("chapter_progress")
+        .select("last_page, completed")
+        .eq("user_id", userId)
+        .eq("chapter_id", chapterId)
+        .maybeSingle();
+      await supabase.from("chapter_progress").upsert(
+        {
+          user_id: userId,
+          manga_id: mangaId,
+          chapter_id: chapterId,
+          chapter_label: label,
+          last_page: currentPage,
+          total_pages: total,
+          completed: (existing?.completed ?? false) || currentPage >= total,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id,chapter_id" }
+      );
+    }, 1200);
+    return () => clearTimeout(t);
+  }, [userId, data, mangaId, chapterId, chapters, currentPage]);
+
   const idx = chapters?.findIndex((c: { id: string }) => c.id === chapterId) ?? -1;
   // chapters are sorted desc: newer = lower index
   const nextChapter = idx > 0 ? chapters![idx - 1] : null;
