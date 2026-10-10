@@ -199,3 +199,19 @@ export const getChapterPages = createServerFn({ method: "GET" })
       })),
     };
   });
+
+export const getLatestChapterIds = createServerFn({ method: "POST" })
+  .inputValidator((data: { ids: string[] }) => ({ ids: data.ids.slice(0, 100) }))
+  .handler(async ({ data }) => {
+    const out: Record<string, string | null> = {};
+    if (data.ids.length === 0) return out;
+    const params = new URLSearchParams();
+    data.ids.forEach((id) => params.append("ids[]", id));
+    params.set("limit", String(data.ids.length));
+    params.append("contentRating[]", "safe");
+    params.append("contentRating[]", "suggestive");
+    params.append("contentRating[]", "erotica");
+    const json = await mdFetch(`/manga?${params.toString()}`);
+    for (const m of json.data ?? []) out[m.id] = m.attributes?.latestUploadedChapter ?? null;
+    return out;
+  });
