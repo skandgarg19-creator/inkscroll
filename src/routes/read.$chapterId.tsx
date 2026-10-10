@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
-import { ArrowLeft, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Loader2, Settings } from "lucide-react";
 import { getChapterPages, getChapters } from "@/lib/mangadex.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { ResumeHelper } from "@/components/ResumeHelper";
@@ -36,6 +36,8 @@ function ReaderPage() {
   const fetchChapters = useServerFn(getChapters);
   const [userId, setUserId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [settings, updateSettings] = useReaderSettings();
+  const [showSettings, setShowSettings] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -144,7 +146,7 @@ function ReaderPage() {
     idx >= 0 && chapters && idx < chapters.length - 1 ? chapters[idx + 1] : null;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" style={BG_STYLE[settings.bg]}>
       <div className="sticky top-0 z-10 border-b border-border bg-background/90 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-3">
           <Link
@@ -195,7 +197,15 @@ function ReaderPage() {
               </button>
             </div>
           )}
+          <button
+            aria-label="Reader settings"
+            onClick={() => setShowSettings((v) => !v)}
+            className={`rounded-md p-1.5 hover:bg-accent ${chapters && chapters.length > 0 ? "" : "ml-auto"}`}
+          >
+            <Settings className="h-5 w-5" />
+          </button>
         </div>
+        {showSettings && <SettingsPanel s={settings} update={updateSettings} />}
       </div>
 
       {chapters && chapters.length > 0 && (
@@ -209,7 +219,7 @@ function ReaderPage() {
           onSamePage={(p: number) => scrollToPage(Math.min(p, data?.pages.length ?? p))}
         />
       )}
-      <div className="mx-auto max-w-3xl px-2 py-4">
+      <div className={`mx-auto w-full px-2 py-4 ${WIDTH_CLASS[settings.width]}`}>
         {isLoading && (
           <div className="flex h-96 items-center justify-center text-muted-foreground">
             <Loader2 className="h-6 w-6 animate-spin" />
@@ -221,8 +231,8 @@ function ReaderPage() {
           </p>
         )}
         {data?.pages.map((p, i) => (
-          <div key={p.original} id={`page-${i + 1}`} data-page={i + 1}>
-            <PageImage page={p} index={i} />
+          <div key={`${p.original}-${settings.quality}`} id={`page-${i + 1}`} data-page={i + 1}>
+            <PageImage page={p} index={i} quality={settings.quality} />
           </div>
         ))}
 
@@ -287,16 +297,69 @@ function ReaderPage() {
   );
 }
 
+type ReaderSettings = { width: "fit" | "narrow" | "medium"; bg: "default" | "black" | "warm"; quality: "saver" | "hd" };
+const DEFAULT_SETTINGS: ReaderSettings = { width: "medium", bg: "default", quality: "saver" };
+const WIDTH_CLASS = { fit: "max-w-none", narrow: "max-w-[720px]", medium: "max-w-[900px]" } as const;
+const BG_STYLE: Record<ReaderSettings["bg"], React.CSSProperties | undefined> = {
+  default: undefined,
+  black: { backgroundColor: "#000" },
+  warm: { backgroundColor: "#1c1712" },
+};
+
+function useReaderSettings() {
+  const [s, setS] = useState<ReaderSettings>(DEFAULT_SETTINGS);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("inkscroll-reader");
+      if (raw) setS({ ...DEFAULT_SETTINGS, ...JSON.parse(raw) });
+    } catch {}
+  }, []);
+  const update = (patch: Partial<ReaderSettings>) =>
+    setS((prev) => {
+      const next = { ...prev, ...patch };
+      localStorage.setItem("inkscroll-reader", JSON.stringify(next));
+      return next;
+    });
+  return [s, update] as const;
+}
+
+function SettingsPanel({ s, update }: { s: ReaderSettings; update: (p: Partial<ReaderSettings>) => void }) {
+  const row = <K extends keyof ReaderSettings>(label: string, key: K, opts: [ReaderSettings[K], string][]) => (
+    <div>
+      <div className="mb-1 text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="flex flex-wrap gap-1">
+        {opts.map(([v, l]) => (
+          <button
+            key={v}
+            onClick={() => update({ [key]: v } as Partial<ReaderSettings>)}
+            className={`rounded-md border px-3 py-1 text-sm ${s[key] === v ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-accent"}`}
+          >
+            {l}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+  return (
+    <div className="absolute right-4 top-full z-30 mt-2 w-72 space-y-3 rounded-md border border-border bg-card p-4 shadow-xl">
+      {row("Page width", "width", [["fit", "Fit screen"], ["medium", "Medium"], ["narrow", "Narrow"]])}
+      {row("Background", "bg", [["default", "Slate"], ["black", "Black"], ["warm", "Warm"]])}
+      {row("Image quality", "quality", [["saver", "Data saver"], ["hd", "Original HD"]])}
+    </div>
+  );
+}
+
 function PageImage({
   page,
   index,
+  quality,
 }: {
   page: { saver: string | null; original: string; fallback: string };
   index: number;
+  quality: ReaderSettings["quality"];
 }) {
-  const sources = [page.saver, page.original, page.fallback].filter(
-    (s): s is string => !!s
-  );
+  const ordered = quality === "hd" ? [page.original, page.saver, page.fallback] : [page.saver, page.original, page.fallback];
+  const sources = ordered.filter((s): s is string => !!s);
   const [attempt, setAttempt] = useState(0);
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -310,7 +373,7 @@ function PageImage({
           setFailed(false);
           setAttempt((a) => a + 1);
         }}
-        className="mx-auto my-2 flex h-64 w-full max-w-2xl items-center justify-center rounded-md border border-border bg-card text-sm text-muted-foreground hover:text-foreground"
+        className="mx-auto my-2 flex h-64 w-full items-center justify-center rounded-md border border-border bg-card text-sm text-muted-foreground hover:text-foreground"
       >
         Page {index + 1} didn't load — tap to retry
       </button>
@@ -318,7 +381,7 @@ function PageImage({
   }
 
   return (
-    <div className={loaded ? "" : "mx-auto min-h-64 w-full max-w-2xl animate-pulse bg-card"}>
+    <div className={loaded ? "" : "mx-auto min-h-64 w-full animate-pulse bg-card"}>
       <img
         key={url}
         src={url}
@@ -330,7 +393,7 @@ function PageImage({
           if (attempt < sources.length * 2 - 1) setAttempt((a) => a + 1);
           else setFailed(true);
         }}
-        className="mx-auto w-full max-w-2xl"
+        className="mx-auto w-full"
       />
     </div>
   );
