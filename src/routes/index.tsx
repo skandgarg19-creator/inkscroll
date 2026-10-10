@@ -8,6 +8,7 @@ import heroArt from "@/assets/hero-manhua.png";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { SearchSuggest } from "@/components/SearchSuggest";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -57,6 +58,7 @@ function Home() {
   const activeSort = sort && sort in SORTS ? sort : "Most followed";
   const navigate = useNavigate({ from: "/" });
   const [query, setQuery] = useState("");
+  const [suggestOpen, setSuggestOpen] = useState(false);
   const [submitted, setSubmitted] = useState("");
   const fetchManhua = useServerFn(searchManhua);
 
@@ -137,17 +139,33 @@ function Home() {
             className="mt-8 flex max-w-lg gap-2"
             onSubmit={(e) => {
               e.preventDefault();
+              setSuggestOpen(false);
               setSubmitted(query.trim());
               navigate({ search: buildSearch({}) });
             }}
           >
-            <div className="relative flex-1">
+            <div
+              className="relative flex-1"
+              onBlur={(e) => {
+                if (!e.currentTarget.contains(e.relatedTarget as Node)) setSuggestOpen(false);
+              }}
+            >
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setSuggestOpen(true);
+                }}
+                onFocus={() => setSuggestOpen(true)}
+                onKeyDown={(e) => e.key === "Escape" && setSuggestOpen(false)}
                 placeholder="Search titles… e.g. Solo Leveling"
                 className="pl-9 bg-card border-input"
+              />
+              <SearchSuggest
+                query={query}
+                open={suggestOpen}
+                onClose={() => setSuggestOpen(false)}
               />
             </div>
             <Button type="submit">Search</Button>
