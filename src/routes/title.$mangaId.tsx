@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { Bookmark, BookmarkCheck, BookOpen, ChevronRight } from "lucide-react";
-import { getManhua, getChapters } from "@/lib/mangadex.functions";
+import { getManhua, getChapters, getLatestChapterIds } from "@/lib/mangadex.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -47,6 +47,8 @@ function TitlePage() {
     queryFn: () => fetchChapters({ data: { mangaId } }),
   });
 
+  const fetchLatest = useServerFn(getLatestChapterIds);
+
   const { data: bookmarked } = useQuery({
     queryKey: ["bookmark", userId, mangaId],
     enabled: !!userId,
@@ -59,6 +61,30 @@ function TitlePage() {
       return !!data;
     },
   });
+
+  async function latestId() {
+    try {
+      const map = await fetchLatest({ data: { ids: [mangaId] } });
+      return map[mangaId] ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  // Visiting a bookmarked title clears its "new chapter" badge
+  useEffect(() => {
+    if (!userId || !bookmarked) return;
+    latestId().then((id) => {
+      if (!id) return;
+      supabase
+        .from("bookmarks")
+        .update({ last_seen_chapter_id: id })
+        .eq("user_id", userId)
+        .eq("manga_id", mangaId)
+        .then(() => queryClient.invalidateQueries({ queryKey: ["bookmarks"] }));
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, bookmarked, mangaId]);
 
   async function toggleBookmark() {
     if (!userId) {
@@ -79,10 +105,12 @@ function TitlePage() {
         manga_id: mangaId,
         title: manga.title,
         cover_url: manga.coverUrl,
+        last_seen_chapter_id: await latestId(),
       });
-      toast.success("Saved to your library");
+      toast.success("Saved — you'll see a New chapter badge when it updates");
     }
     queryClient.invalidateQueries({ queryKey: ["bookmark", userId, mangaId] });
+    queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
   }
 
   if (isLoading || !manga) {

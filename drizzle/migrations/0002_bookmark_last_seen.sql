@@ -1,0 +1,1 @@
+ALTER TABLE public.bookmarks ADD COLUMN IF NOT EXISTS last_seen_chapter_id text;

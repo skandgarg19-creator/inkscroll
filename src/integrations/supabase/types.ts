@@ -19,6 +19,7 @@ export type Database = {
           cover_url: string | null
           created_at: string
           id: string
+          last_seen_chapter_id: string | null
           manga_id: string
           title: string
           user_id: string
@@ -27,6 +28,7 @@ export type Database = {
           cover_url?: string | null
           created_at?: string
           id?: string
+          last_seen_chapter_id?: string | null
           manga_id: string
           title: string
           user_id: string
@@ -35,6 +37,7 @@ export type Database = {
           cover_url?: string | null
           created_at?: string
           id?: string
+          last_seen_chapter_id?: string | null
           manga_id?: string
           title?: string
           user_id?: string
