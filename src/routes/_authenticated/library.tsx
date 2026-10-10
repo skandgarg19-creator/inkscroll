@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Bookmark, History, BookOpen, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { getLatestChapterIds } from "@/lib/mangadex.functions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
@@ -32,6 +34,18 @@ function LibraryPage() {
       return data ?? [];
     },
   });
+
+  const fetchLatest = useServerFn(getLatestChapterIds);
+  const ids = (bookmarks ?? []).map((b) => b.manga_id);
+  const { data: latest } = useQuery({
+    queryKey: ["latest-chapters", ids],
+    enabled: ids.length > 0,
+    queryFn: () => fetchLatest({ data: { ids } }),
+  });
+  const hasNew = (b: { manga_id: string; last_seen_chapter_id: string | null }) => {
+    const l = latest?.[b.manga_id];
+    return !!l && !!b.last_seen_chapter_id && l !== b.last_seen_chapter_id;
+  };
 
   const { data: history } = useQuery({
     queryKey: ["history"],
@@ -104,6 +118,9 @@ function LibraryPage() {
                       </div>
                     )}
                   </div>
+                  {hasNew(b) && (
+                    <Badge className="absolute left-2 top-2">New chapter</Badge>
+                  )}
                   <p className="mt-2 line-clamp-2 text-sm font-semibold">{b.title}</p>
                 </Link>
                 <button
