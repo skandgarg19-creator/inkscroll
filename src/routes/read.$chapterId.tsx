@@ -6,6 +6,7 @@ import { ArrowLeft, ChevronLeft, ChevronRight, Loader2, Settings } from "lucide-
 import { getChapterPages, getChapters } from "@/lib/mangadex.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { ResumeHelper } from "@/components/ResumeHelper";
+import { useReaderSettings, type ReaderSettings } from "@/lib/reader-settings";
 
 export const Route = createFileRoute("/read/$chapterId")({
   validateSearch: (search: Record<string, unknown>): {
@@ -36,8 +37,7 @@ function ReaderPage() {
   const fetchChapters = useServerFn(getChapters);
   const [userId, setUserId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [settings, updateSettings] = useReaderSettings();
-  const [showSettings, setShowSettings] = useState(false);
+  const { settings } = useReaderSettings();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -197,15 +197,15 @@ function ReaderPage() {
               </button>
             </div>
           )}
-          <button
+          <Link
+            to="/settings"
             aria-label="Reader settings"
-            onClick={() => setShowSettings((v) => !v)}
             className={`rounded-md p-1.5 hover:bg-accent ${chapters && chapters.length > 0 ? "" : "ml-auto"}`}
           >
             <Settings className="h-5 w-5" />
-          </button>
+          </Link>
         </div>
-        {showSettings && <SettingsPanel s={settings} update={updateSettings} />}
+
       </div>
 
       {chapters && chapters.length > 0 && (
@@ -297,57 +297,12 @@ function ReaderPage() {
   );
 }
 
-type ReaderSettings = { width: "fit" | "narrow" | "medium"; bg: "default" | "black" | "warm"; quality: "saver" | "hd" };
-const DEFAULT_SETTINGS: ReaderSettings = { width: "medium", bg: "default", quality: "saver" };
 const WIDTH_CLASS = { fit: "max-w-none", narrow: "max-w-[720px]", medium: "max-w-[900px]" } as const;
 const BG_STYLE: Record<ReaderSettings["bg"], React.CSSProperties | undefined> = {
   default: undefined,
   black: { backgroundColor: "#000" },
   warm: { backgroundColor: "#1c1712" },
 };
-
-function useReaderSettings() {
-  const [s, setS] = useState<ReaderSettings>(DEFAULT_SETTINGS);
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem("inkscroll-reader");
-      if (raw) setS({ ...DEFAULT_SETTINGS, ...JSON.parse(raw) });
-    } catch {}
-  }, []);
-  const update = (patch: Partial<ReaderSettings>) =>
-    setS((prev) => {
-      const next = { ...prev, ...patch };
-      localStorage.setItem("inkscroll-reader", JSON.stringify(next));
-      return next;
-    });
-  return [s, update] as const;
-}
-
-function SettingsPanel({ s, update }: { s: ReaderSettings; update: (p: Partial<ReaderSettings>) => void }) {
-  const row = <K extends keyof ReaderSettings>(label: string, key: K, opts: [ReaderSettings[K], string][]) => (
-    <div>
-      <div className="mb-1 text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className="flex flex-wrap gap-1">
-        {opts.map(([v, l]) => (
-          <button
-            key={v}
-            onClick={() => update({ [key]: v } as Partial<ReaderSettings>)}
-            className={`rounded-md border px-3 py-1 text-sm ${s[key] === v ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-accent"}`}
-          >
-            {l}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-  return (
-    <div className="absolute right-4 top-full z-30 mt-2 w-72 space-y-3 rounded-md border border-border bg-card p-4 shadow-xl">
-      {row("Page width", "width", [["fit", "Fit screen"], ["medium", "Medium"], ["narrow", "Narrow"]])}
-      {row("Background", "bg", [["default", "Slate"], ["black", "Black"], ["warm", "Warm"]])}
-      {row("Image quality", "quality", [["saver", "Data saver"], ["hd", "Original HD"]])}
-    </div>
-  );
-}
 
 function PageImage({
   page,

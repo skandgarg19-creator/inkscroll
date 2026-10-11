@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as GenresRouteImport } from './routes/genres'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated/library'
 import { Route as ReadChapterIdRouteImport } from './routes/read.$chapterId'
 import { Route as TitleMangaIdRouteImport } from './routes/title.$mangaId'
@@ -36,6 +37,11 @@ const GenresRoute = GenresRouteImport.update({
   path: '/genres',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedLibraryRoute = AuthenticatedLibraryRouteImport.update({
   id: '/library',
   path: '/library',
@@ -56,6 +62,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/genres': typeof GenresRoute
+  '/settings': typeof SettingsRoute
   '/library': typeof AuthenticatedLibraryRoute
   '/read/$chapterId': typeof ReadChapterIdRoute
   '/title/$mangaId': typeof TitleMangaIdRoute
@@ -64,6 +71,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/genres': typeof GenresRoute
+  '/settings': typeof SettingsRoute
   '/library': typeof AuthenticatedLibraryRoute
   '/read/$chapterId': typeof ReadChapterIdRoute
   '/title/$mangaId': typeof TitleMangaIdRoute
@@ -74,6 +82,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/genres': typeof GenresRoute
+  '/settings': typeof SettingsRoute
   '/_authenticated/library': typeof AuthenticatedLibraryRoute
   '/read/$chapterId': typeof ReadChapterIdRoute
   '/title/$mangaId': typeof TitleMangaIdRoute
@@ -84,6 +93,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/genres'
+    | '/settings'
     | '/library'
     | '/read/$chapterId'
     | '/title/$mangaId'
@@ -92,6 +102,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/genres'
+    | '/settings'
     | '/library'
     | '/read/$chapterId'
     | '/title/$mangaId'
@@ -101,6 +112,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/genres'
+    | '/settings'
     | '/_authenticated/library'
     | '/read/$chapterId'
     | '/title/$mangaId'
@@ -111,6 +123,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   GenresRoute: typeof GenresRoute
+  SettingsRoute: typeof SettingsRoute
   ReadChapterIdRoute: typeof ReadChapterIdRoute
   TitleMangaIdRoute: typeof TitleMangaIdRoute
 }
@@ -143,6 +156,13 @@ declare module '@tanstack/react-router' {
       path: '/genres'
       fullPath: '/genres'
       preLoaderRoute: typeof GenresRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/library': {
@@ -185,6 +205,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   GenresRoute: GenresRoute,
+  SettingsRoute: SettingsRoute,
   ReadChapterIdRoute: ReadChapterIdRoute,
   TitleMangaIdRoute: TitleMangaIdRoute,
 }

@@ -101,6 +101,30 @@ export type Database = {
         }
         Relationships: []
       }
+      reader_preferences: {
+        Row: {
+          bg: string
+          quality: string
+          updated_at: string
+          user_id: string
+          width: string
+        }
+        Insert: {
+          bg?: string
+          quality?: string
+          updated_at?: string
+          user_id: string
+          width?: string
+        }
+        Update: {
+          bg?: string
+          quality?: string
+          updated_at?: string
+          user_id?: string
+          width?: string
+        }
+        Relationships: []
+      }
       reading_history: {
         Row: {
           chapter_id: string
