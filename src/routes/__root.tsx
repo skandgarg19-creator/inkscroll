@@ -165,6 +165,9 @@ function Header() {
           <Button variant="ghost" size="sm" asChild>
             <Link to="/genres">Genres</Link>
           </Button>
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/settings">Settings</Link>
+          </Button>
           {signedIn ? (
             <>
               <Button variant="ghost" size="sm" asChild>
